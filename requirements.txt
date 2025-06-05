@@ -1,0 +1,12 @@
+Django>=4.2
+psycopg2-binary
+celery
+redis
+djangorestframework
+python-dotenv
+openai
+drf-spectacular
+dj-database-url
+pytest
+pytest-django
+pytest-cov

@@ -1,0 +1,66 @@
+---
+description: Project Requriements
+globs: 
+alwaysApply: false
+---
+# 2025-05 Senior Dev Take-Home Challenge
+
+## 2-4 Hour Async Backend & GPT-Chaining Task
+
+Hi candidate,
+
+Thank you again for taking the time to apply for the role.
+Because you're an experienced engineer, we'd rather see how you spin up a small, meaningful service with modern AI tools than put you through a traditional coding test that GitHub Copilot could finish for you anyway.
+
+*You are encouraged—and in fact expected—to use AI-assisted coding tools such as Cursor/Claude to maximize efficiency and quality. The deliverable will be evaluated solely on its effectiveness and quality; independence is not a primary concern. However, you are still expected to fully understand and be able to explain what you have created*.
+
+### **What we’d like you to do**
+
+Build a **minimal backend API** that:
+
+1. **POST /jobs** → places a “guideline-ingest” job on a queue and returns an **event_id** in <200 ms.
+2. A worker consumes jobs **FIFO**, runs a **two-step GPT chain** (summarize → generate checklist), and persists outputs.
+3. **GET /jobs/{event_id}** returns the job’s {status, result?}.
+
+**Tech stack priority**
+
+- **Python + Django + Celery + Redis/Postgres** (preferred)
+- If you’re not comfortable with Python, **TypeScript + NestJS/Express + BullMQ** is fine.
+
+We’ll provide an OpenAI API key for the GPT calls.
+
+**Time box:** Please spend **no more than 2–4 focused hours**. We value your time and are interested in your architectural judgement, not edge-case polish.
+
+---
+
+### Important note on API keys
+
+Please **do NOT commit or expose the provided OpenAI API key** in your repository, even though it is limited in usage.
+Make sure to add your .env file (or wherever you store secrets) to .gitignore to keep the key private.
+
+---
+
+### What to hand in
+
+- Public GitHub repo with MIT/Apache-2 license
+- One-command bootstrap: docker compose up --build
+- Unit tests (~70% coverage)
+- Auto-generated OpenAPI spec
+- **README (≤300 words)** explaining design choices and where AI tools helped
+- (Optional) Mermaid/diagram generated with AI
+
+That's it—no leet-code drills, no brain-teasers.
+
+---
+
+### Logistics
+
+- When you’re ready, just reply with the repo link.
+- We’ll clone the repo, run docker compose up, execute the tests, and hit the endpoints.
+- After review, we’ll schedule a short follow-up to discuss your decisions.
+
+We appreciate the time you'll invest and look forward to seeing how you leverage AI to bootstrap a clean, pragmatic service.
+
+Best regards,
+Swain Hwang
+Engineering @ Avo

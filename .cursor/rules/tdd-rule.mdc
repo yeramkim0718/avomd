@@ -1,0 +1,146 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+name: Senior Dev Challenge Rules
+description: Cursor rules tailored for the 2025-05 Senior Dev Take-Home Backend & GPT-Chaining task.
+version: 1.0.0
+tags: [django, celery, docker, tdd, openapi, testing]
+
+rules:
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 1. Environment & Docker
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - name: Require Dockerfile and docker-compose.yml in project root
+    match: ".*"
+    suggest: "⚙️ 프로젝트 루트에 반드시 Dockerfile과 docker-compose.yml 파일을 포함하세요."
+    priority: highest
+
+  - name: Prevent committing secrets
+    pattern: "ENV\\s+OPENAI_API_KEY|openai_api_key"
+    suggest: "🔒 API 키는 .env에 보관하고 .gitignore에 등록하세요. 코드에 하드코딩하지 마세요."
+    priority: highest
+
+  - name: Use docker-compose up for local run
+    match: ".*"
+    suggest: "🛠 ‘docker compose up --build’ 명령어로만 컨테이너를 실행하세요. 로컬 환경 종속 코드를 추가하지 마세요."
+    priority: high
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 2. TDD & Testing
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - name: Tests must be written before implementation
+    match: ".*"
+    suggest: "🧪 먼저 실패하는 테스트를 작성한 뒤에 구현 코드를 작성하세요."
+    priority: high
+
+  - name: Enforce ≥70% unit-test coverage
+    match: ".*"
+    suggest: "✅ 최소 70% 유닛 테스트 커버리지 달성 목표를 유지하세요. Coverage 리포트를 집중적으로 확인하세요."
+    priority: high
+
+  - name: Test filenames must end with _test.py or test_*.py
+    pattern: ".+\\.py"
+    match: ".*"
+    suggest: "📝 테스트 파일은 test_*.py 혹은 *_test.py 형태로 작성해 주세요."
+    when: file.extension == "py"
+
+  - name: Do not write production code without a failing test
+    pattern: "def\\s+(?!test_).*"
+    suggest: "🚫 production 코드 작성 전에 반드시 해당 기능에 대한 테스트를 추가하세요."
+    when: file.extension == "py"
+
+  - name: Celery tasks require separate integration tests
+    pattern: "app/tasks"
+    suggest: "🔄 Celery 워커가 실제로 큐에서 작업을 가져오는지 확인하는 통합 테스트를 작성하세요."
+    when: file.path contains "tasks.py"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 3. API & OpenAPI Spec
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - name: Ensure POST /jobs endpoint exists
+    match: "views\\.py|urls\\.py"
+    suggest: "🔍 POST /jobs 엔드포인트가 views.py와 urls.py에 선언돼 있는지 확인하세요."
+    priority: high
+
+  - name: Ensure GET /jobs/{event_id} endpoint exists
+    match: "views\\.py|urls\\.py"
+    suggest: "🔍 GET /jobs/{event_id} 엔드포인트가 views.py와 urls.py에 선언돼 있는지 확인하세요."
+    priority: high
+
+  - name: Auto-generate OpenAPI spec (drf-spectacular, drf-yasg 등)
+    match: "settings\\.py|requirements\\.txt"
+    suggest: "📄 REST framework용 OpenAPI 스펙 자동 생성을 설정하세요 (e.g. drf-spectacular, drf-yasg)."
+    priority: high
+
+  - name: Validate that swagger/ui route is reachable
+    pattern: "urlpatterns.*swagger.*"
+    suggest: "🌐 /swagger/ 또는 /redoc/ 경로가 정상 동작하는지 확인하세요."
+    when: file.path contains "urls.py"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 4. Queue & Persistence
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - name: Use Redis or RabbitMQ broker for Celery
+    pattern: "CELERY_BROKER_URL"
+    suggest: "🚀 Redis 혹은 RabbitMQ를 브로커로 구성했는지 settings.py에서 확인하세요."
+    when: file.extension == "py"
+
+  - name: Persist job status in Postgres
+    match: "models\\.py"
+    suggest: "💾 Job 모델에 상태(status), 결과(result) 필드를 정의하고 마이그레이션을 생성하세요."
+    priority: high
+
+  - name: Two-step GPT chain must be queued
+    match: "tasks\\.py"
+    suggest: "🤖 Celery 워커 내부에서 summarize → generate_checklist 순으로 GPT API 호출 흐름을 구현하세요."
+    priority: medium
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 5. Code Quality & Linting
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - name: Enforce PEP8 / flake8 for Python files
+    match: ".*\\.py"
+    suggest: "🔍 flake8 또는 black으로 코드 스타일을 자동 정리하세요."
+    priority: medium
+
+  - name: Lint Dockerfiles
+    pattern: "^(FROM|RUN|CMD|ENTRYPOINT|COPY|WORKDIR|ENV)"
+    suggest: "🛠 hadolint 같은 도구로 Dockerfile 린팅을 수행하세요."
+    when: file.name == "Dockerfile"
+
+  - name: Lint YAML (docker-compose.yml)
+    pattern: ".*"
+    suggest: "🔧 yamllint로 docker-compose.yml 파일을 검사하세요."
+    when: file.name == "docker-compose.yml"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 6. Commit Hygiene & Documentation
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - name: Ensure README ≤300 words
+    match: "README\\.md"
+    suggest: "📖 300단어 이하로 설계 설명, AI 도구 사용 내역, 실행 방법 등을 작성하세요."
+    priority: high
+
+  - name: Ensure MIT or Apache-2 license file exists
+    match: "LICENSE"
+    suggest: "📜 저장소 루트에 MIT 또는 Apache-2 라이선스 파일을 추가하세요."
+    priority: high
+
+  - name: Verify test coverage badge in README (optional)
+    match: "README\\.md"
+    suggest: "🎯 테스트 커버리지 뱃지를 추가해 빌드 파이프라인 상태를 시각화하세요."
+    priority: low
+
+  - name: One-command bootstrap instruction must be present
+    match: "README\\.md"
+    suggest: "▶️ ‘docker compose up --build’ 실행 방법을 명시했는지 확인하세요."
+    priority: high

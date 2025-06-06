@@ -5,10 +5,13 @@ from .serializers import (
     JobCreateSerializer,
     JobStatusSerializer,
     JobCreateResponseSerializer,
+    JobSerializer,
 )
 from .models import Job
 from .tasks import process_job
 from drf_spectacular.utils import extend_schema
+from rest_framework import viewsets
+from django.shortcuts import get_object_or_404
 
 
 class JobCreateView(APIView):
@@ -45,4 +48,28 @@ class JobStatusView(APIView):
             return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = JobStatusSerializer(job)
+        return Response(serializer.data)
+
+
+class JobViewSet(viewsets.ModelViewSet):
+    queryset = Job.objects.all()
+    serializer_class = JobSerializer
+    lookup_field = 'event_id'
+
+    def create(self, request, *args, **kwargs):
+        """POST /jobs 엔드포인트"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        job = serializer.save()
+        
+        # Celery 태스크 실행
+        process_job.delay(str(job.event_id))
+        
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def retrieve(self, request, *args, **kwargs):
+        """GET /jobs/{event_id} 엔드포인트"""
+        job = get_object_or_404(Job, event_id=kwargs['event_id'])
+        serializer = self.get_serializer(job)
         return Response(serializer.data)
